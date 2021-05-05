@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import logging
 from io import BytesIO
 from typing import Union
 
@@ -25,6 +26,13 @@ from neptune.new.internal.utils import verify_type
 from scikitplot.metrics import plot_confusion_matrix
 
 from neptune_lightgbm import __version__
+
+__all__ = [
+    'NeptuneCallback',
+    'create_booster_summary',
+]
+
+log = logging.getLogger()
 
 
 class NeptuneCallback:
@@ -85,11 +93,11 @@ class NeptuneCallback:
         self._run['source_code/integrations/neptune-lightgbm'] = __version__
 
     def __call__(self, env):
-        # eval_train
-        # eval_valid
-        # TODO: ('cv_agg', k, np.mean(v), metric_type[k], np.std(v))
+        # TODO:
+        # (data_name, eval_name, val, is_higher_better): `lightgbm.basic.Booster.__inner_eval`
+        # ('cv_agg', k, np.mean(v), metric_type[k], np.std(v)): `lightgbm.engine._agg_cv_result`
         for name, loss_name, loss_value, *_ in env.evaluation_result_list:
-            channel_name = '{}{}_{}'.format(self._base_namespace, name, loss_name)
+            channel_name = 'foo/{}/foo2/{}_{}'.format(self._base_namespace, name, loss_name)
             self._run[channel_name].log(loss_value, step=env.iteration)
 
 
@@ -125,6 +133,9 @@ def create_booster_summary(
         results_dict["{}feature_importances/gain".format(visuals_path)] \
             = neptune.types.File.as_image(gain_plot.figure)
 
+    # TODO: Your file is larger than 15MB. Neptune supports logging files in-memory objects smaller than 15MB.
+    #       Resize or increase compression of this object
+
     if log_trees:
         trees_series = []
         for i in list_trees:
@@ -138,9 +149,13 @@ def create_booster_summary(
             trees_series.append(neptune.types.File.as_image(ax.figure))
         results_dict["{}trees".format(visuals_path)] = neptune.types.FileSeries(trees_series)
 
-    if log_trees_as_dataframe and isinstance(booster, lgb.Booster):
-        df = booster.trees_to_dataframe()
-        results_dict["trees_as_dataframe"] = neptune.types.File.as_html(df)
+    if log_trees_as_dataframe:
+        if isinstance(booster, lgb.Booster):
+            df = booster.trees_to_dataframe()
+            results_dict["trees_as_dataframe"] = neptune.types.File.as_html(df)
+        else:
+            # TODO: log here and don't perform action, or detect it when calculation starts and raise an exception
+            log.warning("Trees won't be logged as dataframe. `booster` must be instance of `lightgbm.Booster` class.")
 
     if log_pickled_booster:
         results_dict["pickled_model"] = neptune.types.File.as_pickle(booster)
