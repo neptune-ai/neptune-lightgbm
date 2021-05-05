@@ -19,14 +19,21 @@ from typing import Union
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt
-import neptune.new as neptune
 import numpy as np
 from graphviz import ExecutableNotFound as GraphvizExecutableNotFound
 from matplotlib import image
-from neptune.new.internal.utils import verify_type
 from scikitplot.metrics import plot_confusion_matrix
 
 from neptune_lightgbm import __version__
+
+try:
+    # neptune-client=0.9.0 package structure
+    import neptune.new as neptune
+    from neptune.new.internal.utils import verify_type
+except ImportError:
+    # neptune-client=1.0.0 package structure
+    import neptune
+    from neptune.internal.utils import verify_type
 
 __all__ = [
     'NeptuneCallback',
