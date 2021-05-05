@@ -21,6 +21,7 @@ import lightgbm as lgb
 import matplotlib.pyplot as plt
 import neptune.new as neptune
 import numpy as np
+from graphviz import ExecutableNotFound as GraphvizExecutableNotFound
 from matplotlib import image
 from neptune.new.internal.utils import verify_type
 from scikitplot.metrics import plot_confusion_matrix
@@ -137,17 +138,21 @@ def create_booster_summary(
     #       Resize or increase compression of this object
 
     if log_trees:
-        trees_series = []
-        for i in list_trees:
-            digraph = lgb.create_tree_digraph(booster, tree_index=i, show_info='data_percentage')
-            _, ax = plt.subplots(1, 1)
-            s = BytesIO()
-            s.write(digraph.pipe(format='png'))
-            s.seek(0)
-            ax.imshow(image.imread(s))
-            ax.axis('off')
-            trees_series.append(neptune.types.File.as_image(ax.figure))
-        results_dict["{}trees".format(visuals_path)] = neptune.types.FileSeries(trees_series)
+        try:
+            trees_series = []
+            for i in list_trees:
+                digraph = lgb.create_tree_digraph(booster, tree_index=i, show_info='data_percentage')
+                _, ax = plt.subplots(1, 1)
+                s = BytesIO()
+                s.write(digraph.pipe(format='png'))
+                s.seek(0)
+                ax.imshow(image.imread(s))
+                ax.axis('off')
+                trees_series.append(neptune.types.File.as_image(ax.figure))
+            results_dict["{}trees".format(visuals_path)] = neptune.types.FileSeries(trees_series)
+        except GraphvizExecutableNotFound:
+            # TODO: link to Neptune docs section where will be such info: https://graphviz.org/download/
+            log.warning(f"Trees won't be logged. To make it work install graphviz library on your OS.")
 
     if log_trees_as_dataframe:
         if isinstance(booster, lgb.Booster):
@@ -162,6 +167,6 @@ def create_booster_summary(
 
     if log_confusion_matrix:
         ax = plot_confusion_matrix(y_true=y_true, y_pred=y_pred)
-        results_dict["{}confusion_matrix".format(visuals_path)] = neptune.types.File.as_image(ax.figure)
+        results_dict[f"{visuals_path}confusion_matrix"] = neptune.types.File.as_image(ax.figure)
 
     return results_dict
