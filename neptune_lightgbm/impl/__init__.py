@@ -13,12 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from io import BytesIO
+from typing import Union
 
+import lightgbm as lgb
+import matplotlib.pyplot as plt
 import neptune.new as neptune
+import numpy as np
+from matplotlib import image
+from neptune.new.internal.utils import verify_type
+from scikitplot.metrics import plot_confusion_matrix
 
 from neptune_lightgbm import __version__
-
-from neptune.new.internal.utils import verify_type
 
 
 class NeptuneCallback:
@@ -79,7 +85,68 @@ class NeptuneCallback:
         self._run['source_code/integrations/neptune-lightgbm'] = __version__
 
     def __call__(self, env):
-        for name, loss_name, loss_value, _ in env.evaluation_result_list:
+        # eval_train
+        # eval_valid
+        # TODO: ('cv_agg', k, np.mean(v), metric_type[k], np.std(v))
+        for name, loss_name, loss_value, *_ in env.evaluation_result_list:
             channel_name = '{}{}_{}'.format(self._base_namespace, name, loss_name)
             self._run[channel_name].log(loss_value, step=env.iteration)
 
+
+def create_booster_summary(
+        booster: Union[lgb.Booster, lgb.sklearn.LGBMModel],
+        log_importances: bool = True,
+        max_num_features: int = 10,
+        list_trees: list = None,
+        log_trees_as_dataframe: bool = True,  # works only for lgb.Booster
+        log_pickled_booster: bool = True,
+        log_trees: bool = False,  # requires graphviz
+        log_confusion_matrix: bool = False,  # requires scikit-plot
+        y_true: np.ndarray = None,
+        y_pred: np.ndarray = None,
+):
+    results_dict = {}
+    visuals_path = "visualizations/"
+    if log_importances:
+        split_plot = lgb.plot_importance(
+            booster,
+            importance_type="split",
+            title="Feature importance (split)",
+            max_num_features=max_num_features
+        )
+        gain_plot = lgb.plot_importance(
+            booster,
+            importance_type="gain",
+            title="Feature importance (gain)",
+            max_num_features=max_num_features
+        )
+        results_dict["{}feature_importances/split".format(visuals_path)] \
+            = neptune.types.File.as_image(split_plot.figure)
+        results_dict["{}feature_importances/gain".format(visuals_path)] \
+            = neptune.types.File.as_image(gain_plot.figure)
+
+    if log_trees:
+        trees_series = []
+        for i in list_trees:
+            digraph = lgb.create_tree_digraph(booster, tree_index=i, show_info='data_percentage')
+            _, ax = plt.subplots(1, 1)
+            s = BytesIO()
+            s.write(digraph.pipe(format='png'))
+            s.seek(0)
+            ax.imshow(image.imread(s))
+            ax.axis('off')
+            trees_series.append(neptune.types.File.as_image(ax.figure))
+        results_dict["{}trees".format(visuals_path)] = neptune.types.FileSeries(trees_series)
+
+    if log_trees_as_dataframe and isinstance(booster, lgb.Booster):
+        df = booster.trees_to_dataframe()
+        results_dict["trees_as_dataframe"] = neptune.types.File.as_html(df)
+
+    if log_pickled_booster:
+        results_dict["pickled_model"] = neptune.types.File.as_pickle(booster)
+
+    if log_confusion_matrix:
+        ax = plot_confusion_matrix(y_true=y_true, y_pred=y_pred)
+        results_dict["{}confusion_matrix".format(visuals_path)] = neptune.types.File.as_image(ax.figure)
+
+    return results_dict

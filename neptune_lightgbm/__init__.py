@@ -14,7 +14,15 @@
 # limitations under the License.
 #
 
-from ._version import get_versions
+from neptune_lightgbm._version import get_versions
+
+__all__ = [
+    '__version__',
+    'NeptuneCallback',
+    'create_booster_summary',
+]
 
 __version__ = get_versions()['version']
+
+from neptune_lightgbm.impl import NeptuneCallback, create_booster_summary
 del get_versions
