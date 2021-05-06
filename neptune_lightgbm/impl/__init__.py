@@ -14,13 +14,14 @@
 # limitations under the License.
 #
 import logging
+import subprocess
 from io import BytesIO
 from typing import Union
+import warnings
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt
 import numpy as np
-from graphviz import ExecutableNotFound as GraphvizExecutableNotFound
 from matplotlib import image
 from scikitplot.metrics import plot_confusion_matrix
 
@@ -45,15 +46,19 @@ log = logging.getLogger()
 
 class NeptuneCallback:
     """Callable class meant for logging lightGBM learning curves to Neptune.
+
     Goes over the list of metrics and valid_sets passed to the `lgb.train`
     object and logs them to a separate channels. For example with 'objective': 'multiclass'
     and `valid_names=['train','valid']` there will be 2 channels created:
     `train_multiclass_logloss` and `valid_multiclass_logloss`.
     Object of this class should be passed to the `callbacks` parameter of the `lgb.train` function.
+
     Args:
-        run(`neptune.new.run.Run`): Neptune Run. If this parameter is skipped then the last created Neptune Run in this process will be used.
+        run(`neptune.new.run.Run`): Neptune Run.
+            If this parameter is skipped then the last created Neptune Run in this process will be used.
         base_namespace(str): Prefix that should be added before the `metric_name`
             and `valid_name` before logging to the appropriate channel.
+
     Examples:
         Prepare dataset::
             import lightgbm as lgb
@@ -83,7 +88,7 @@ class NeptuneCallback:
                            )
     Note:
         If you are running a k-fold validation it is a good idea to add the k-fold prefix
-        and pass it to the `NeptuneCallback` constructor::
+        and pass it to the `NeptuneCallback` constructor::zz
             prefix='fold_{}'.format(fold_id)
             monitor = NeptuneCallback(base_namespace=prefix)
     """
@@ -97,16 +102,49 @@ class NeptuneCallback:
 
         self._run = run
         self._base_namespace = base_namespace
+        self.params_logged = False
+        self.feature_names_logged = False
 
         self._run['source_code/integrations/neptune-lightgbm'] = __version__
 
     def __call__(self, env):
-        # TODO:
-        # (data_name, eval_name, val, is_higher_better): `lightgbm.basic.Booster.__inner_eval`
-        # ('cv_agg', k, np.mean(v), metric_type[k], np.std(v)): `lightgbm.engine._agg_cv_result`
-        for name, loss_name, loss_value, *_ in env.evaluation_result_list:
-            channel_name = 'foo/{}/foo2/{}_{}'.format(self._base_namespace, name, loss_name)
-            self._run[channel_name].log(loss_value, step=env.iteration)
+        if not self.params_logged:
+            self._run["{}params".format(self._base_namespace)] = env.params
+            self._run["{}params/env/begin_iteration".format(self._base_namespace)] = env.begin_iteration
+            self._run["{}params/env/end_iteration".format(self._base_namespace)] = env.end_iteration
+            self.params_logged = True
+
+        if not self.feature_names_logged:
+            # lgb.train
+            if isinstance(env.model, lgb.engine.Booster):
+                self._run["{}feature_names".format(self._base_namespace)] = env.model.feature_name()
+                self._run["{}train_set/num_features".format(self._base_namespace)] = env.model.train_set.num_feature()
+                self._run["{}train_set/num_rows".format(self._base_namespace)] = env.model.train_set.num_data()
+            # lgb.cv
+            if isinstance(env.model, lgb.engine.CVBooster):
+                for i, booster in enumerate(env.model.boosters):
+                    self._run["{}/booster_{}/feature_names".format(self._base_namespace, i)] \
+                        = booster.feature_name()
+                    self._run["{}/booster_{}/train_set/num_features".format(self._base_namespace, i)] \
+                        = booster.train_set.num_feature()
+                    self._run["{}/booster_{}/train_set/num_rows".format(self._base_namespace, i)] \
+                        = booster.train_set.num_feature()
+            self.feature_names_logged = True
+
+        # log metrics
+        for row in env.evaluation_result_list:
+            # lgb.train
+            if len(row) == 4:
+                dataset, metric, value, _ = row
+                log_name = "{}{}/{}".format(self._base_namespace, dataset, metric)
+                self._run[log_name].log(value, step=env.iteration)
+            # lgb.cv
+            if len(row) == 5:
+                dataset, metric, value, _, std = row
+                log_val_name = "{}{}/{}/val".format(self._base_namespace, dataset, metric)
+                self._run[log_val_name].log(value, step=env.iteration)
+                log_std_name = "{}{}/{}/std".format(self._base_namespace, dataset, metric)
+                self._run[log_std_name].log(std, step=env.iteration)
 
 
 def create_booster_summary(
@@ -141,32 +179,36 @@ def create_booster_summary(
         results_dict["{}feature_importances/gain".format(visuals_path)] \
             = neptune.types.File.as_image(gain_plot.figure)
 
+    if log_trees:
+        try:
+            subprocess.call(['dot', '-V'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except OSError:
+            log_trees = False
+            message = "Graphviz executables not found, so trees will not be logged. " \
+                      "Make sure the Graphviz executables are on your systems' PATH"
+            warnings.warn(message)
+
     # TODO: Your file is larger than 15MB. Neptune supports logging files in-memory objects smaller than 15MB.
     #       Resize or increase compression of this object
 
     if log_trees:
-        try:
-            trees_series = []
-            for i in list_trees:
-                digraph = lgb.create_tree_digraph(booster, tree_index=i, show_info='data_percentage')
-                _, ax = plt.subplots(1, 1)
-                s = BytesIO()
-                s.write(digraph.pipe(format='png'))
-                s.seek(0)
-                ax.imshow(image.imread(s))
-                ax.axis('off')
-                trees_series.append(neptune.types.File.as_image(ax.figure))
-            results_dict["{}trees".format(visuals_path)] = neptune.types.FileSeries(trees_series)
-        except GraphvizExecutableNotFound:
-            # TODO: link to Neptune docs section where will be such info: https://graphviz.org/download/
-            log.warning(f"Trees won't be logged. To make it work install graphviz library on your OS.")
+        trees_series = []
+        for i in list_trees:
+            digraph = lgb.create_tree_digraph(booster, tree_index=i, show_info='data_percentage')
+            _, ax = plt.subplots(1, 1)
+            s = BytesIO()
+            s.write(digraph.pipe(format='png'))
+            s.seek(0)
+            ax.imshow(image.imread(s))
+            ax.axis('off')
+            trees_series.append(neptune.types.File.as_image(ax.figure))
+        results_dict["{}trees".format(visuals_path)] = neptune.types.FileSeries(trees_series)
 
     if log_trees_as_dataframe:
         if isinstance(booster, lgb.Booster):
             df = booster.trees_to_dataframe()
             results_dict["trees_as_dataframe"] = neptune.types.File.as_html(df)
         else:
-            # TODO: log here and don't perform action, or detect it when calculation starts and raise an exception
             log.warning("Trees won't be logged as dataframe. `booster` must be instance of `lightgbm.Booster` class.")
 
     if log_pickled_booster:
