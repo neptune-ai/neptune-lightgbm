@@ -1,7 +1,8 @@
 import os
 
-from neptune_lightgbm._version import get_versions
 from setuptools import setup
+
+from neptune_lightgbm._version import get_versions
 
 
 def main():
@@ -15,7 +16,7 @@ def main():
         all_deps += extras[group_name]
     extras['all'] = all_deps
 
-    base_libs = ['neptune-client>=0.5.4', 'lightgbm']
+    base_libs = ['neptune-client>=0.9.0', 'lightgbm', 'matplotlib', 'scikit-plot', 'graphviz']
 
     version = None
     if os.path.exists('PKG-INFO'):
@@ -37,11 +38,33 @@ def main():
         url="https://github.com/neptune-ai/neptune-lightgbm",
         long_description=readme,
         long_description_content_type="text/markdown",
-        license='MIT License',
+        license='Apache License 2.0',
         install_requires=base_libs,
         extras_require=extras,
         packages=['neptune_lightgbm', 'neptune_lightgbm.impl'],
-        zip_safe=False
+        zip_safe=False,
+        classifiers=[
+            # As from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+            'Development Status :: 5 - Production/Stable',
+            'Environment :: Console',
+            'Intended Audience :: Developers',
+            'Intended Audience :: Science/Research',
+            'License :: OSI Approved :: Apache Software License',
+            'Natural Language :: English',
+            'Operating System :: MacOS',
+            'Operating System :: Microsoft :: Windows',
+            'Operating System :: POSIX',
+            'Operating System :: Unix',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
+            'Topic :: Software Development :: Libraries :: Python Modules',
+            'Programming Language :: Python :: Implementation :: CPython',
+            'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        ],
+        keywords=['MLOps', 'ML Experiment Tracking', 'ML Model Registry', 'ML Model Store', 'ML Metadata Store'],
     )
 
 
