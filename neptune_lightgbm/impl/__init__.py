@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
 import subprocess
+import warnings
 from io import BytesIO
 from typing import Union
-import warnings
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt
@@ -40,8 +39,6 @@ __all__ = [
     'NeptuneCallback',
     'create_booster_summary',
 ]
-
-log = logging.getLogger()
 
 
 class NeptuneCallback:
@@ -188,9 +185,6 @@ def create_booster_summary(
                       "Make sure the Graphviz executables are on your systems' PATH"
             warnings.warn(message)
 
-    # TODO: Your file is larger than 15MB. Neptune supports logging files in-memory objects smaller than 15MB.
-    #       Resize or increase compression of this object
-
     if log_trees:
         trees_series = []
         for i in list_trees:
@@ -207,9 +201,14 @@ def create_booster_summary(
     if log_trees_as_dataframe:
         if isinstance(booster, lgb.Booster):
             df = booster.trees_to_dataframe()
-            results_dict["trees_as_dataframe"] = neptune.types.File.as_html(df)
+            html_df = neptune.types.File.as_html(df)
+            results_dict["trees_as_dataframe"] = html_df
+            if not df.empty and not html_df.content:
+                warnings.warn(
+                    "'trees_as_dataframe' wasn't logged. Probably generated dataframe was to large.")
         else:
-            log.warning("Trees won't be logged as dataframe. `booster` must be instance of `lightgbm.Booster` class.")
+            warnings.warn("'trees_as_dataframe' won't be logged."
+                          " `booster` must be instance of `lightgbm.Booster` class.")
 
     if log_pickled_booster:
         results_dict["pickled_model"] = neptune.types.File.as_pickle(booster)
