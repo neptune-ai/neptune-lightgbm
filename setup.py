@@ -16,7 +16,7 @@ def main():
         all_deps += extras[group_name]
     extras['all'] = all_deps
 
-    base_libs = ['neptune-client>=0.9.0', 'lightgbm', 'matplotlib', 'scikit-plot', 'graphviz']
+    base_libs = ['neptune-client>=0.9.8', 'lightgbm', 'matplotlib', 'scikit-plot', 'graphviz']
 
     version = None
     if os.path.exists('PKG-INFO'):
@@ -35,7 +35,13 @@ def main():
         author='neptune.ai',
         support='contact@neptune.ai',
         author_email='contact@neptune.ai',
-        url="https://github.com/neptune-ai/neptune-lightgbm",
+        # package url management: https://stackoverflow.com/a/56243786/1565454
+        url="https://neptune.ai/",
+        project_urls={
+            'Tracker': 'https://github.com/neptune-ai/neptune-lightgbm/issues',
+            'Source': 'https://github.com/neptune-ai/neptune-lightgbm',
+            'Documentation': 'https://docs.neptune.ai/integrations-and-supported-tools/model-training/lightgbm',
+        },
         long_description=readme,
         long_description_content_type="text/markdown",
         license='Apache License 2.0',
@@ -45,7 +51,8 @@ def main():
         zip_safe=False,
         classifiers=[
             # As from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-            'Development Status :: 5 - Production/Stable',
+            'Development Status :: 4 - Beta',
+            # 'Development Status :: 5 - Production/Stable',  # Switch to Stable when applicable
             'Environment :: Console',
             'Intended Audience :: Developers',
             'Intended Audience :: Science/Research',
