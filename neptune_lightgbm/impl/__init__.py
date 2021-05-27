@@ -13,16 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+__all__ = [
+    'create_booster_summary',
+    'NeptuneCallback',
+]
+
 import subprocess
 import warnings
 from io import BytesIO
-from typing import Union
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import image
 from scikitplot.metrics import plot_confusion_matrix
+from typing import Union
 
 from neptune_lightgbm import __version__
 
@@ -35,10 +41,7 @@ except ImportError:
     import neptune
     from neptune.internal.utils import verify_type
 
-__all__ = [
-    'NeptuneCallback',
-    'create_booster_summary',
-]
+INTEGRATION_VERSION_KEY = 'source_code/integrations/neptune-lightgbm'
 
 
 class NeptuneCallback:
@@ -102,7 +105,7 @@ class NeptuneCallback:
         self.params_logged = False
         self.feature_names_logged = False
 
-        self._run['source_code/integrations/neptune-lightgbm'] = __version__
+        self._run[INTEGRATION_VERSION_KEY] = __version__
 
     def __call__(self, env):
         if not self.params_logged:
