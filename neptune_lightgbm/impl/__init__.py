@@ -155,6 +155,7 @@ def create_booster_summary(
         log_trees_as_dataframe: bool = True,  # works only for lgb.Booster
         log_pickled_booster: bool = True,
         log_trees: bool = False,  # requires graphviz
+        tree_figsize: int = 30,  # control size of the visualized tree image
         log_confusion_matrix: bool = False,  # requires scikit-plot
         y_true: np.ndarray = None,
         y_pred: np.ndarray = None,
@@ -192,7 +193,7 @@ def create_booster_summary(
         trees_series = []
         for i in list_trees:
             digraph = lgb.create_tree_digraph(booster, tree_index=i, show_info='data_percentage')
-            _, ax = plt.subplots(1, 1)
+            _, ax = plt.subplots(1, 1, figsize=(tree_figsize, tree_figsize))
             s = BytesIO()
             s.write(digraph.pipe(format='png'))
             s.seek(0)
