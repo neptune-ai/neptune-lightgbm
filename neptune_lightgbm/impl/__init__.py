@@ -186,18 +186,21 @@ class NeptuneCallback:
 
 
 def create_booster_summary(
-        booster: Union[lgb.Booster, lgb.sklearn.LGBMModel],
-        log_importances: bool = True,
-        max_num_features: int = 10,
-        list_trees: list = None,
-        log_trees_as_dataframe: bool = True,  # works only for lgb.Booster
-        log_pickled_booster: bool = True,
-        log_trees: bool = False,  # requires graphviz
-        tree_figsize: int = 30,  # control size of the visualized tree image
-        log_confusion_matrix: bool = False,  # requires scikit-plot
-        y_true: np.ndarray = None,
-        y_pred: np.ndarray = None,
+    booster: Union[lgb.Booster, lgb.sklearn.LGBMModel],
+    log_importances: bool = True,
+    max_num_features: int = 10,
+    list_trees: list = None,
+    log_trees_as_dataframe: bool = True,  # works only for lgb.Booster
+    log_pickled_booster: bool = True,
+    log_trees: bool = False,  # requires graphviz
+    tree_figsize: int = 30,  # control size of the visualized tree image
+    log_confusion_matrix: bool = False,  # requires scikit-plot
+    y_true: np.ndarray = None,
+    y_pred: np.ndarray = None,
 ):
+    """
+
+    """
     results_dict = {}
     visuals_path = "visualizations/"
     if log_importances:
