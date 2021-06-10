@@ -225,13 +225,16 @@ def create_booster_summary(
         list_trees (list): Defaults to None. Indices of the target tree to visualize.
             Works only if ``log_trees`` is set to ``True``.
             See `lightgbm.plot_tree`_ for details.
-        log_trees_as_dataframe (bool): Defaults to True. Parse the model and log trees in the pandas DataFrame format.
+        log_trees_as_dataframe (bool): Defaults to True.
+            Parse the model and log trees in the easy-to-read pandas DataFrame format.
             Works only for ``lgb.Booster``.
+            See `lightgbm.Booster.trees_to_dataframe`_ for details.
         log_pickled_booster (bool): Defaults to True. Log model as pickled file.
         log_trees (bool): Defaults to False. Log visualized trees.
             This requires graphviz to work. Learn about setup in the `Neptune-LightGBM installation`_ docs.
         tree_figsize (int): Defaults to 30, Control size of the visualized tree image.
             Increase this in case you work with large trees.
+            Works only if ``log_trees`` is set to ``True``.
         log_confusion_matrix (bool): Defaults to False. Log confusion matrix.
             If set to True, you need to pass ``y_true`` and ``y_pred``.
         y_true (:obj:`np.ndarray`): Defaults to None. True labels on the test set.
@@ -314,6 +317,8 @@ def create_booster_summary(
         https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.plot_importance.html#lightgbm-plot-importance
        _lightgbm.plot_tree:
         https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.plot_tree.html#lightgbm-plot-tree
+       _lightgbm.Booster.trees_to_dataframe:
+        https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html#lightgbm.Booster.trees_to_dataframe
        _Neptune-LightGBM installation:
         https://docs.neptune.ai/integrations-and-supported-tools/model-training/lightgbm#install-requirements
        _example scripts:
