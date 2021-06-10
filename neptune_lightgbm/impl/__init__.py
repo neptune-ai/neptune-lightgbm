@@ -198,7 +198,7 @@ def create_booster_summary(
     y_true: np.ndarray = None,
     y_pred: np.ndarray = None,
 ):
-    """Log model (booster) summary after training to the run in Neptune.
+    """Create model summary after training that can be assigned to the run namespace.
 
     See guide with examples in the `Neptune-LightGBM docs`_.
 
