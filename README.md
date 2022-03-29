@@ -16,6 +16,7 @@ Experiment tracking, model registry, data versioning, and live model monitoring 
 * hardware consumption (CPU, GPU, memory),
 * stdout and stderr logs,
 * training code and git commit information.
+* [other metadata](https://docs.neptune.ai/you-should-know/what-can-you-log-and-display)
 
 ![image](https://user-images.githubusercontent.com/97611089/160637021-6d324be7-00f0-4b89-bffd-ae937f6802b4.png)
 *Example dashboard with train-valid metrics and selected parameters*
