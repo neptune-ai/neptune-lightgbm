@@ -29,6 +29,47 @@ Experiment tracking, model registry, data versioning, and live model monitoring 
 * [Example of a run logged in the Neptune app](https://app.neptune.ai/o/common/org/lightgbm-integration/e/LGBM-86/dashboard/train-cls-summary-6c07f9e0-36ca-4432-9530-7fd3457220b6)
 * [Run example in Google Colab](https://colab.research.google.com/github/neptune-ai/examples/blob/main/integrations-and-supported-tools/lightgbm/notebooks/Neptune_LightGBM.ipynb)
 
+## Example
+
+```python
+# On the command line:
+pip install neptune-client lightgbm neptune-lightgbm
+```
+```python
+# In Python:
+import lightgbm as lgb
+import neptune.new as neptune
+from neptune.new.integrations.lightgbm import NeptuneCallback
+
+# Start a run
+run = neptune.init(
+    project="common/lightgbm-integration",
+    api_token="ANONYMOUS",
+)
+
+# Create a NeptuneCallback instance
+neptune_callback = NeptuneCallback(run=run)
+
+# Prepare datasets
+...
+lgb_train = lgb.Dataset(X_train, y_train)
+
+# Define model parameters
+params = {
+    "boosting_type": "gbdt",
+    "objective": "multiclass",
+    "num_class": 10,
+    ...
+}
+
+# Train the model
+gbm = lgb.train(
+    params,
+    lgb_train,
+    callbacks=[neptune_callback],
+)
+```
+
 ## Support
 
 If you got stuck or simply want to talk to us, here are your options:
