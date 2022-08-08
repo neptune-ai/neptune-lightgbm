@@ -193,7 +193,7 @@ def create_booster_summary(
     log_importances: bool = True,
     max_num_features: int = 10,
     list_trees: list = None,
-    log_trees_as_dataframe: bool = True,
+    log_trees_as_dataframe: bool = False,
     log_pickled_booster: bool = True,
     log_trees: bool = False,
     tree_figsize: int = 30,
@@ -228,7 +228,7 @@ def create_booster_summary(
         list_trees (list): Defaults to None. Indices of the target tree to visualize.
             Works only if ``log_trees`` is set to ``True``.
             See `lightgbm.plot_tree`_ for details.
-        log_trees_as_dataframe (bool): Defaults to True.
+        log_trees_as_dataframe (bool): Defaults to False.
             Parse the model and log trees in the easy-to-read pandas DataFrame format.
             Works only for ``lgb.Booster``.
             See `lightgbm.Booster.trees_to_dataframe`_ for details.
