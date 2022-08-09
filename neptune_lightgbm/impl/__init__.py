@@ -22,13 +22,13 @@ __all__ = [
 import subprocess
 import warnings
 from io import BytesIO
+from typing import Union
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import image
 from scikitplot.metrics import plot_confusion_matrix
-from typing import Union
 
 from neptune_lightgbm import __version__
 
@@ -133,7 +133,7 @@ class NeptuneCallback:
 
     """
 
-    def __init__(self, run: 'neptune.Run', base_namespace=""):
+    def __init__(self, run: "neptune.Run", base_namespace=""):
         expect_not_an_experiment(run)
         verify_type("run", run, neptune.Run)
         verify_type("base_namespace", base_namespace, str)
@@ -150,26 +150,33 @@ class NeptuneCallback:
 
     def __call__(self, env):
         if not self.params_logged:
-            self._run["{}params".format(self._base_namespace)] = env.params
-            self._run["{}params/env/begin_iteration".format(self._base_namespace)] = env.begin_iteration
-            self._run["{}params/env/end_iteration".format(self._base_namespace)] = env.end_iteration
+            self._run[f"{self._base_namespace}params"] = env.params
+            self._run[f"{self._base_namespace}params/env/begin_iteration"] = env.begin_iteration
+            self._run[f"{self._base_namespace}params/env/end_iteration"] = env.end_iteration
             self.params_logged = True
 
         if not self.feature_names_logged:
             # lgb.train
             if isinstance(env.model, lgb.engine.Booster):
-                self._run["{}feature_names".format(self._base_namespace)] = env.model.feature_name()
-                self._run["{}train_set/num_features".format(self._base_namespace)] = env.model.train_set.num_feature()
-                self._run["{}train_set/num_rows".format(self._base_namespace)] = env.model.train_set.num_data()
+                self._run[f"{self._base_namespace}feature_names"] = env.model.feature_name()
+                self._run[
+                    f"{self._base_namespace}train_set/num_features"
+                ] = env.model.train_set.num_feature()
+                self._run[
+                    f"{self._base_namespace}train_set/num_rows"
+                ] = env.model.train_set.num_data()
             # lgb.cv
             if isinstance(env.model, lgb.engine.CVBooster):
                 for i, booster in enumerate(env.model.boosters):
-                    self._run["{}/booster_{}/feature_names".format(self._base_namespace, i)] \
-                        = booster.feature_name()
-                    self._run["{}/booster_{}/train_set/num_features".format(self._base_namespace, i)] \
-                        = booster.train_set.num_feature()
-                    self._run["{}/booster_{}/train_set/num_rows".format(self._base_namespace, i)] \
-                        = booster.train_set.num_feature()
+                    self._run[
+                        f"{self._base_namespace}/booster_{i}/feature_names"
+                    ] = booster.feature_name()
+                    self._run[
+                        f"{self._base_namespace}/booster_{i}/train_set/num_features"
+                    ] = booster.train_set.num_feature()
+                    self._run[
+                        f"{self._base_namespace}/booster_{i}/train_set/num_rows"
+                    ] = booster.train_set.num_feature()
             self.feature_names_logged = True
 
         # log metrics
@@ -177,14 +184,14 @@ class NeptuneCallback:
             # lgb.train
             if len(row) == 4:
                 dataset, metric, value, _ = row
-                log_name = "{}{}/{}".format(self._base_namespace, dataset, metric)
+                log_name = f"{self._base_namespace}{dataset}/{metric}"
                 self._run[log_name].log(value, step=env.iteration)
             # lgb.cv
             if len(row) == 5:
                 dataset, metric, value, _, std = row
-                log_val_name = "{}{}/{}/val".format(self._base_namespace, dataset, metric)
+                log_val_name = f"{self._base_namespace}{dataset}/{metric}/val"
                 self._run[log_val_name].log(value, step=env.iteration)
-                log_std_name = "{}{}/{}/std".format(self._base_namespace, dataset, metric)
+                log_std_name = f"{self._base_namespace}{dataset}/{metric}/std"
                 self._run[log_std_name].log(std, step=env.iteration)
 
 
@@ -193,7 +200,7 @@ def create_booster_summary(
     log_importances: bool = True,
     max_num_features: int = 10,
     list_trees: list = None,
-    log_trees_as_dataframe: bool = False,
+    log_trees_as_dataframe: bool = True,
     log_pickled_booster: bool = True,
     log_trees: bool = False,
     tree_figsize: int = 30,
@@ -228,7 +235,7 @@ def create_booster_summary(
         list_trees (list): Defaults to None. Indices of the target tree to visualize.
             Works only if ``log_trees`` is set to ``True``.
             See `lightgbm.plot_tree`_ for details.
-        log_trees_as_dataframe (bool): Defaults to False.
+        log_trees_as_dataframe (bool): Defaults to True.
             Parse the model and log trees in the easy-to-read pandas DataFrame format.
             Works only for ``lgb.Booster``.
             See `lightgbm.Booster.trees_to_dataframe`_ for details.
@@ -335,26 +342,31 @@ def create_booster_summary(
             booster,
             importance_type="split",
             title="Feature importance (split)",
-            max_num_features=max_num_features
+            max_num_features=max_num_features,
         )
         gain_plot = lgb.plot_importance(
             booster,
             importance_type="gain",
             title="Feature importance (gain)",
-            max_num_features=max_num_features
+            max_num_features=max_num_features,
         )
-        results_dict["{}feature_importances/split".format(visuals_path)] \
-            = neptune.types.File.as_image(split_plot.figure)
-        results_dict["{}feature_importances/gain".format(visuals_path)] \
-            = neptune.types.File.as_image(gain_plot.figure)
+        results_dict[f"{visuals_path}feature_importances/split"] = neptune.types.File.as_image(
+            split_plot.figure
+        )
+
+        results_dict[f"{visuals_path}feature_importances/gain"] = neptune.types.File.as_image(
+            gain_plot.figure
+        )
 
     if log_trees:
         try:
             subprocess.call(["dot", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except OSError:
             log_trees = False
-            message = "Graphviz executables not found, so trees will not be logged. " \
-                      "Make sure the Graphviz executables are on your systems' PATH"
+            message = (
+                "Graphviz executables not found, so trees will not be logged. "
+                "Make sure the Graphviz executables are on your systems' PATH"
+            )
             warnings.warn(message)
 
     if log_trees:
@@ -368,19 +380,25 @@ def create_booster_summary(
             ax.imshow(image.imread(s))
             ax.axis("off")
             trees_series.append(neptune.types.File.as_image(ax.figure))
-        results_dict["{}trees".format(visuals_path)] = neptune.types.FileSeries(trees_series)
+        results_dict[f"{visuals_path}trees"] = neptune.types.FileSeries(trees_series)
 
     if log_trees_as_dataframe:
         if isinstance(booster, lgb.Booster):
             df = booster.trees_to_dataframe()
-            html_df = neptune.types.File.as_html(df)
-            results_dict["trees_as_dataframe"] = html_df
-            if not df.empty and not html_df.content:
+            stream_buffer = BytesIO()
+            df.to_csv(stream_buffer, index=False)
+            results_dict["trees_as_dataframe"] = neptune.types.File.from_stream(
+                stream_buffer, extension="csv"
+            )
+            if not df.empty:
                 warnings.warn(
-                    "'trees_as_dataframe' wasn't logged. Probably generated dataframe was to large.")
+                    "'trees_as_dataframe' wasn't logged. Probably generated dataframe was to large."
+                )
         else:
-            warnings.warn("'trees_as_dataframe' won't be logged."
-                          " `booster` must be instance of `lightgbm.Booster` class.")
+            warnings.warn(
+                "'trees_as_dataframe' won't be logged."
+                " `booster` must be instance of `lightgbm.Booster` class."
+            )
 
     if log_pickled_booster:
         results_dict["pickled_model"] = neptune.types.File.as_pickle(booster)
