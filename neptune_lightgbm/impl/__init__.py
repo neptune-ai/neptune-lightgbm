@@ -20,6 +20,7 @@ __all__ = [
 ]
 
 import subprocess
+import tempfile
 import warnings
 from io import BytesIO
 from typing import Union
@@ -385,15 +386,9 @@ def create_booster_summary(
     if log_trees_as_dataframe:
         if isinstance(booster, lgb.Booster):
             df = booster.trees_to_dataframe()
-            stream_buffer = BytesIO()
-            df.to_csv(stream_buffer, index=False)
-            results_dict["trees_as_dataframe"] = neptune.types.File.from_stream(
-                stream_buffer, extension="csv"
-            )
-            if not df.empty:
-                warnings.warn(
-                    "'trees_as_dataframe' wasn't logged. Probably generated dataframe was to large."
-                )
+            with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp:
+                df.to_csv(tmp.name, index=False)
+                results_dict["trees_as_dataframe"] = neptune.types.File(tmp.name)
         else:
             warnings.warn(
                 "'trees_as_dataframe' won't be logged."
