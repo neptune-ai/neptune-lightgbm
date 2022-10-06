@@ -22,24 +22,24 @@ __all__ = [
 import subprocess
 import warnings
 from io import BytesIO
+from typing import Union
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import image
 from scikitplot.metrics import plot_confusion_matrix
-from typing import Union
 
 from neptune_lightgbm import __version__
 
 try:
     # neptune-client=0.9.0+ package structure
     import neptune.new as neptune
-    from neptune.new.integrations.utils import verify_type, expect_not_an_experiment
+    from neptune.new.integrations.utils import expect_not_an_experiment, verify_type
 except ImportError:
     # neptune-client>=1.0.0 package structure
     import neptune
-    from neptune.integrations.utils import verify_type, expect_not_an_experiment
+    from neptune.integrations.utils import expect_not_an_experiment, verify_type
 
 INTEGRATION_VERSION_KEY = "source_code/integrations/neptune-lightgbm"
 
@@ -131,7 +131,7 @@ class NeptuneCallback:
 
     """
 
-    def __init__(self, run: 'neptune.Run', base_namespace=""):
+    def __init__(self, run: "neptune.Run", base_namespace=""):
         expect_not_an_experiment(run)
         verify_type("run", run, neptune.Run)
         verify_type("base_namespace", base_namespace, str)
@@ -162,12 +162,13 @@ class NeptuneCallback:
             # lgb.cv
             if isinstance(env.model, lgb.engine.CVBooster):
                 for i, booster in enumerate(env.model.boosters):
-                    self._run["{}/booster_{}/feature_names".format(self._base_namespace, i)] \
-                        = booster.feature_name()
-                    self._run["{}/booster_{}/train_set/num_features".format(self._base_namespace, i)] \
-                        = booster.train_set.num_feature()
-                    self._run["{}/booster_{}/train_set/num_rows".format(self._base_namespace, i)] \
-                        = booster.train_set.num_feature()
+                    self._run["{}/booster_{}/feature_names".format(self._base_namespace, i)] = booster.feature_name()
+                    self._run[
+                        "{}/booster_{}/train_set/num_features".format(self._base_namespace, i)
+                    ] = booster.train_set.num_feature()
+                    self._run[
+                        "{}/booster_{}/train_set/num_rows".format(self._base_namespace, i)
+                    ] = booster.train_set.num_feature()
             self.feature_names_logged = True
 
         # log metrics
@@ -330,29 +331,25 @@ def create_booster_summary(
     visuals_path = "visualizations/"
     if log_importances:
         split_plot = lgb.plot_importance(
-            booster,
-            importance_type="split",
-            title="Feature importance (split)",
-            max_num_features=max_num_features
+            booster, importance_type="split", title="Feature importance (split)", max_num_features=max_num_features
         )
         gain_plot = lgb.plot_importance(
-            booster,
-            importance_type="gain",
-            title="Feature importance (gain)",
-            max_num_features=max_num_features
+            booster, importance_type="gain", title="Feature importance (gain)", max_num_features=max_num_features
         )
-        results_dict["{}feature_importances/split".format(visuals_path)] \
-            = neptune.types.File.as_image(split_plot.figure)
-        results_dict["{}feature_importances/gain".format(visuals_path)] \
-            = neptune.types.File.as_image(gain_plot.figure)
+        results_dict["{}feature_importances/split".format(visuals_path)] = neptune.types.File.as_image(
+            split_plot.figure
+        )
+        results_dict["{}feature_importances/gain".format(visuals_path)] = neptune.types.File.as_image(gain_plot.figure)
 
     if log_trees:
         try:
             subprocess.call(["dot", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except OSError:
             log_trees = False
-            message = "Graphviz executables not found, so trees will not be logged. " \
-                      "Make sure the Graphviz executables are on your systems' PATH"
+            message = (
+                "Graphviz executables not found, so trees will not be logged. "
+                "Make sure the Graphviz executables are on your systems' PATH"
+            )
             warnings.warn(message)
 
     if log_trees:
@@ -374,11 +371,11 @@ def create_booster_summary(
             html_df = neptune.types.File.as_html(df)
             results_dict["trees_as_dataframe"] = html_df
             if not df.empty and not html_df.content:
-                warnings.warn(
-                    "'trees_as_dataframe' wasn't logged. Probably generated dataframe was to large.")
+                warnings.warn("'trees_as_dataframe' wasn't logged. Probably generated dataframe was to large.")
         else:
-            warnings.warn("'trees_as_dataframe' won't be logged."
-                          " `booster` must be instance of `lightgbm.Booster` class.")
+            warnings.warn(
+                "'trees_as_dataframe' won't be logged." " `booster` must be instance of `lightgbm.Booster` class."
+            )
 
     if log_pickled_booster:
         results_dict["pickled_model"] = neptune.types.File.as_pickle(booster)
