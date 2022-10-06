@@ -1,3 +1,9 @@
+## [UNRELEASED] neptune-lightgbm 0.9.15
+
+### Changes
+- Moved `neptune-lightgbm` package to `src` directory ([#8](https://github.com/neptune-ai/neptune-lightgbm/pull/8))
+
+
 ## neptune-lightgbm 0.9.14
 
 ### Changes
