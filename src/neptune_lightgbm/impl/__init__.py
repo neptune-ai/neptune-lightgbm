@@ -17,6 +17,7 @@
 __all__ = [
     "create_booster_summary",
     "NeptuneCallback",
+    "__version__",
 ]
 
 import subprocess
@@ -29,8 +30,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import image
 from scikitplot.metrics import plot_confusion_matrix
-
-from neptune_lightgbm import __version__
 
 try:
     # neptune-client=0.9.0+ package structure
@@ -46,6 +45,10 @@ except ImportError:
         expect_not_an_experiment,
         verify_type,
     )
+
+from neptune_lightgbm._version import get_versions
+
+__version__ = get_versions()["version"]
 
 INTEGRATION_VERSION_KEY = "source_code/integrations/neptune-lightgbm"
 
