@@ -14,4 +14,8 @@
 # limitations under the License.
 #
 
-from neptune_lightgbm.impl import *
+from neptune_lightgbm.impl import (
+    NeptuneCallback,
+    __version__,
+    create_booster_summary,
+)
