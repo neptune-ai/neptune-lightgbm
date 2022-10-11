@@ -21,6 +21,7 @@ __all__ = [
 ]
 
 import subprocess
+import sys
 import warnings
 from io import BytesIO
 from typing import Union
@@ -166,20 +167,20 @@ class NeptuneCallback:
             # lgb.train
             if isinstance(env.model, lgb.engine.Booster):
                 self._run[f"{self._base_namespace}feature_names"] = env.model.feature_name()
-                self._run[
-                    f"{self._base_namespace}train_set/num_features"
-                ] = env.model.train_set.num_feature()
-                self._run[
-                    f"{self._base_namespace}train_set/num_rows"
-                ] = env.model.train_set.num_data()
+                self._run[f"{self._base_namespace}train_set/num_features"] = env.model.train_set.num_feature()
+                self._run[f"{self._base_namespace}train_set/num_rows"] = env.model.train_set.num_data()
             # lgb.cv
             if isinstance(env.model, lgb.engine.CVBooster):
                 for i, booster in enumerate(env.model.boosters):
                     self._run[f"{self._base_namespace}/booster_{i}/feature_names"] = booster.feature_name()
 
-                    self._run[f"{self._base_namespace}/booster_{i}/train_set/num_features"] = booster.train_set.num_feature()
+                    self._run[
+                        f"{self._base_namespace}/booster_{i}/train_set/num_features"
+                    ] = booster.train_set.num_feature()
 
-                    self._run[f"{self._base_namespace}/booster_{i}/train_set/num_rows"] = booster.train_set.num_feature()
+                    self._run[
+                        f"{self._base_namespace}/booster_{i}/train_set/num_rows"
+                    ] = booster.train_set.num_feature()
 
             self.feature_names_logged = True
 
@@ -204,7 +205,7 @@ def create_booster_summary(
     log_importances: bool = True,
     max_num_features: int = 10,
     list_trees: list = None,
-    log_trees_as_dataframe: bool = True,
+    log_trees_as_dataframe: bool = False,
     log_pickled_booster: bool = True,
     log_trees: bool = False,
     tree_figsize: int = 30,
@@ -239,9 +240,9 @@ def create_booster_summary(
         list_trees (list): Defaults to None. Indices of the target tree to visualize.
             Works only if ``log_trees`` is set to ``True``.
             See `lightgbm.plot_tree`_ for details.
-        log_trees_as_dataframe (bool): Defaults to True.
+        log_trees_as_dataframe (bool): Defaults to False.
             Parse the model and log trees in the easy-to-read pandas DataFrame format.
-            Works only for ``lgb.Booster``.
+            Works only for ``lgb.Booster``, and resultant dataframe should be smaller than 32MB to be logged.
             See `lightgbm.Booster.trees_to_dataframe`_ for details.
         log_pickled_booster (bool): Defaults to True. Log model as pickled file.
         log_trees (bool): Defaults to False. Log visualized trees.
@@ -379,10 +380,12 @@ def create_booster_summary(
     if log_trees_as_dataframe:
         if isinstance(booster, lgb.Booster):
             df = booster.trees_to_dataframe()
-            html_df = neptune.types.File.as_html(df)
-            results_dict["trees_as_dataframe"] = html_df
-            if not df.empty and not html_df.content:
-                warnings.warn("'trees_as_dataframe' wasn't logged. Probably generated dataframe was to large.")
+            stream_buffer = BytesIO()
+            df.to_csv(stream_buffer, index=False)
+            if sys.getsizeof(stream_buffer) < 32 * 1024 * 1024:
+                results_dict["trees_as_dataframe"] = neptune.types.File.from_stream(stream_buffer, extension="csv")
+            else:
+                warnings.warn("'trees_as_dataframe' is greater than 32 MB and won't be logged.")
         else:
             warnings.warn(
                 "'trees_as_dataframe' won't be logged." " `booster` must be instance of `lightgbm.Booster` class."
