@@ -14,12 +14,8 @@
 # limitations under the License.
 #
 
-from neptune_lightgbm._version import get_versions
-
-__all__ = [
-    '__version__',
-]
-
-__version__ = get_versions()['version']
-
-del get_versions
+from neptune_lightgbm.impl import (
+    NeptuneCallback,
+    __version__,
+    create_booster_summary,
+)

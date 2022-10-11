@@ -17,6 +17,7 @@
 __all__ = [
     "create_booster_summary",
     "NeptuneCallback",
+    "__version__",
 ]
 
 import subprocess
@@ -30,19 +31,30 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import image
 from scikitplot.metrics import plot_confusion_matrix
+<<<<<<< HEAD:neptune_lightgbm/impl/__init__.py
 
 from neptune_lightgbm import __version__
+=======
+>>>>>>> 144f805d0f4e69ae4ddd98efeca7031a10cb6bf2:src/neptune_lightgbm/impl/__init__.py
 
 try:
     # neptune-client=0.9.0+ package structure
     import neptune.new as neptune
-    from neptune.new.internal.utils import verify_type
-    from neptune.new.internal.utils.compatibility import expect_not_an_experiment
+    from neptune.new.integrations.utils import (
+        expect_not_an_experiment,
+        verify_type,
+    )
 except ImportError:
     # neptune-client>=1.0.0 package structure
     import neptune
-    from neptune.internal.utils import verify_type
-    from neptune.internal.utils.compatibility import expect_not_an_experiment
+    from neptune.integrations.utils import (
+        expect_not_an_experiment,
+        verify_type,
+    )
+
+from neptune_lightgbm._version import get_versions
+
+__version__ = get_versions()["version"]
 
 INTEGRATION_VERSION_KEY = "source_code/integrations/neptune-lightgbm"
 
@@ -169,6 +181,7 @@ class NeptuneCallback:
             # lgb.cv
             if isinstance(env.model, lgb.engine.CVBooster):
                 for i, booster in enumerate(env.model.boosters):
+<<<<<<< HEAD:neptune_lightgbm/impl/__init__.py
                     self._run[
                         f"{self._base_namespace}/booster_{i}/feature_names"
                     ] = booster.feature_name()
@@ -177,6 +190,14 @@ class NeptuneCallback:
                     ] = booster.train_set.num_feature()
                     self._run[
                         f"{self._base_namespace}/booster_{i}/train_set/num_rows"
+=======
+                    self._run["{}/booster_{}/feature_names".format(self._base_namespace, i)] = booster.feature_name()
+                    self._run[
+                        "{}/booster_{}/train_set/num_features".format(self._base_namespace, i)
+                    ] = booster.train_set.num_feature()
+                    self._run[
+                        "{}/booster_{}/train_set/num_rows".format(self._base_namespace, i)
+>>>>>>> 144f805d0f4e69ae4ddd98efeca7031a10cb6bf2:src/neptune_lightgbm/impl/__init__.py
                     ] = booster.train_set.num_feature()
             self.feature_names_logged = True
 
@@ -340,6 +361,7 @@ def create_booster_summary(
     visuals_path = "visualizations/"
     if log_importances:
         split_plot = lgb.plot_importance(
+<<<<<<< HEAD:neptune_lightgbm/impl/__init__.py
             booster,
             importance_type="split",
             title="Feature importance (split)",
@@ -358,6 +380,17 @@ def create_booster_summary(
         results_dict[f"{visuals_path}feature_importances/gain"] = neptune.types.File.as_image(
             gain_plot.figure
         )
+=======
+            booster, importance_type="split", title="Feature importance (split)", max_num_features=max_num_features
+        )
+        gain_plot = lgb.plot_importance(
+            booster, importance_type="gain", title="Feature importance (gain)", max_num_features=max_num_features
+        )
+        results_dict["{}feature_importances/split".format(visuals_path)] = neptune.types.File.as_image(
+            split_plot.figure
+        )
+        results_dict["{}feature_importances/gain".format(visuals_path)] = neptune.types.File.as_image(gain_plot.figure)
+>>>>>>> 144f805d0f4e69ae4ddd98efeca7031a10cb6bf2:src/neptune_lightgbm/impl/__init__.py
 
     if log_trees:
         try:
@@ -386,6 +419,7 @@ def create_booster_summary(
     if log_trees_as_dataframe:
         if isinstance(booster, lgb.Booster):
             df = booster.trees_to_dataframe()
+<<<<<<< HEAD:neptune_lightgbm/impl/__init__.py
             with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp:
                 df.to_csv(tmp.name, index=False)
                 results_dict["trees_as_dataframe"] = neptune.types.File(tmp.name)
@@ -393,6 +427,15 @@ def create_booster_summary(
             warnings.warn(
                 "'trees_as_dataframe' won't be logged."
                 " `booster` must be instance of `lightgbm.Booster` class."
+=======
+            html_df = neptune.types.File.as_html(df)
+            results_dict["trees_as_dataframe"] = html_df
+            if not df.empty and not html_df.content:
+                warnings.warn("'trees_as_dataframe' wasn't logged. Probably generated dataframe was to large.")
+        else:
+            warnings.warn(
+                "'trees_as_dataframe' won't be logged." " `booster` must be instance of `lightgbm.Booster` class."
+>>>>>>> 144f805d0f4e69ae4ddd98efeca7031a10cb6bf2:src/neptune_lightgbm/impl/__init__.py
             )
 
     if log_pickled_booster:
