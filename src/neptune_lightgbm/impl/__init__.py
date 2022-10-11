@@ -21,7 +21,6 @@ __all__ = [
 ]
 
 import subprocess
-import tempfile
 import warnings
 from io import BytesIO
 from typing import Union
@@ -352,7 +351,6 @@ def create_booster_summary(
         results_dict[f"{visuals_path}feature_importances/split"] = neptune.types.File.as_image(split_plot.figure)
 
         results_dict[f"{visuals_path}feature_importances/gain"] = neptune.types.File.as_image(gain_plot.figure)
-
 
     if log_trees:
         try:
