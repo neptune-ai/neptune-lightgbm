@@ -212,7 +212,7 @@ def create_booster_summary(
     log_confusion_matrix: bool = False,
     y_true: np.ndarray = None,
     y_pred: np.ndarray = None,
-):
+) -> dict:
     """Create model summary after training that can be assigned to the run namespace.
 
     See guide with examples in the `Neptune-LightGBM docs`_.
@@ -382,10 +382,10 @@ def create_booster_summary(
             df = booster.trees_to_dataframe()
             stream_buffer = BytesIO()
             df.to_csv(stream_buffer, index=False)
-            if sys.getsizeof(stream_buffer) < 32 * 1024 * 1024:
+            try:
                 results_dict["trees_as_dataframe"] = neptune.types.File.from_stream(stream_buffer, extension="csv")
-            else:
-                warnings.warn("'trees_as_dataframe' is greater than 32 MB and won't be logged.")
+            except ValueError:
+                warnings.warn("'trees_as_dataframe' is larger than 32MB and won't be logged.")
         else:
             warnings.warn(
                 "'trees_as_dataframe' won't be logged." " `booster` must be instance of `lightgbm.Booster` class."
