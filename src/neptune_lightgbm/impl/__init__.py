@@ -21,7 +21,6 @@ __all__ = [
 ]
 
 import subprocess
-import sys
 import warnings
 from io import BytesIO
 from typing import Union
