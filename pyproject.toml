@@ -72,7 +72,6 @@ packages = [
 
 [tool.poetry.urls]
 "Tracker" = "https://github.com/neptune-ai/neptune-lightgbm/issues"
-"Source" = "https://github.com/neptune-ai/neptune-lightgbm"
 "Documentation" = "https://docs.neptune.ai/integrations-and-supported-tools/model-training/lightgbm"
 
 [tool.black]
