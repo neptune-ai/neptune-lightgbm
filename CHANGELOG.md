@@ -4,7 +4,7 @@
 - Moved `neptune-lightgbm` package to `src` directory ([#8](https://github.com/neptune-ai/neptune-lightgbm/pull/8))
 - Defaulted `log_trees_as_dataframe` to `false` ([#5](https://github.com/neptune-ai/neptune-lightgbm/pull/5))
 - Updated `create_booster_summary` to log tree dataframe as a csv ([#5](https://github.com/neptune-ai/neptune-lightgbm/pull/5))
-- Poetry as a package builder ([#?](?))
+- Poetry as a package builder ([#13](https://github.com/neptune-ai/neptune-lightgbm/pull/13))
 
 ## Fixes
 
