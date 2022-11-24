@@ -1,3 +1,8 @@
+## [UNRELEASED] neptune-lightgbm 0.10.1
+
+### Changes
+- Removed size limit for `log_trees_as_dataframe` ([#14](https://github.com/neptune-ai/neptune-lightgbm/pull/14))
+
 ## neptune-lightgbm 0.10.0
 
 ### Changes
