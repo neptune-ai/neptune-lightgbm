@@ -239,7 +239,7 @@ def create_booster_summary(
             See `lightgbm.plot_tree`_ for details.
         log_trees_as_dataframe (bool): Defaults to False.
             Parse the model and log trees in the easy-to-read pandas DataFrame format.
-            Works only for ``lgb.Booster``, and resultant dataframe should be smaller than 32MB to be logged.
+            Works only for ``lgb.Booster``.
             See `lightgbm.Booster.trees_to_dataframe`_ for details.
         log_pickled_booster (bool): Defaults to True. Log model as pickled file.
         log_trees (bool): Defaults to False. Log visualized trees.
@@ -379,10 +379,7 @@ def create_booster_summary(
             df = booster.trees_to_dataframe()
             stream_buffer = BytesIO()
             df.to_csv(stream_buffer, index=False)
-            try:
-                results_dict["trees_as_dataframe"] = neptune.types.File.from_stream(stream_buffer, extension="csv")
-            except ValueError:
-                warnings.warn("'trees_as_dataframe' is larger than 32MB and won't be logged.")
+            results_dict["trees_as_dataframe"] = neptune.types.File.from_stream(stream_buffer, extension="csv")
         else:
             warnings.warn(
                 "'trees_as_dataframe' won't be logged." " `booster` must be instance of `lightgbm.Booster` class."
