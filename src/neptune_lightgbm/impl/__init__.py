@@ -71,7 +71,7 @@ class NeptuneCallback:
         for testing without registration.
 
     Args:
-        run (:obj:`neptune.new.run.Run`): Neptune run object.
+        run (:obj:`neptune.new.run.Run`, :obj:`neptune.new.handler.Handler): Neptune run or handler object.
             A run in Neptune is a representation of all metadata that you log to Neptune.
             Learn more in `run docs`_.
         base_namespace(:obj:`str`, optional): Root namespace. All metadata will be logged inside.
@@ -89,7 +89,7 @@ class NeptuneCallback:
             from sklearn.model_selection import train_test_split
 
             # Create run
-            run = neptune.init(
+            run = neptune.init_run(
                 project="common/lightgbm-integration",
                 api_token="ANONYMOUS",
                 name="train-cls",
@@ -130,9 +130,9 @@ class NeptuneCallback:
             )
 
     .. _Neptune-LightGBM docs:
-        https://docs.neptune.ai/integrations-and-supported-tools/model-training/lightgbm
+        https://docs.neptune.ai/integrations/lightgbm/
        _run docs:
-        https://docs.neptune.ai/api-reference/run
+        https://docs.neptune.ai/api/run/
        _example scripts:
         https://github.com/neptune-ai/examples/tree/main/integrations-and-supported-tools/lightgbm/scripts
 
@@ -140,7 +140,7 @@ class NeptuneCallback:
 
     def __init__(self, run: "neptune.Run", base_namespace=""):
         expect_not_an_experiment(run)
-        verify_type("run", run, neptune.Run)
+        verify_type("run", run, (neptune.run.Run, neptune.handler.Handler))
         verify_type("base_namespace", base_namespace, str)
 
         if base_namespace and not base_namespace.endswith("/"):
@@ -151,7 +151,7 @@ class NeptuneCallback:
         self.params_logged = False
         self.feature_names_logged = False
 
-        self._run[INTEGRATION_VERSION_KEY] = __version__
+        self._run.get_root_object()[INTEGRATION_VERSION_KEY] = __version__
 
     def __call__(self, env):
         if not self.params_logged:
@@ -187,14 +187,14 @@ class NeptuneCallback:
             if len(row) == 4:
                 dataset, metric, value, _ = row
                 log_name = f"{self._base_namespace}{dataset}/{metric}"
-                self._run[log_name].log(value, step=env.iteration)
+                self._run[log_name].append(value, step=env.iteration)
             # lgb.cv
             if len(row) == 5:
                 dataset, metric, value, _, std = row
                 log_val_name = f"{self._base_namespace}{dataset}/{metric}/val"
-                self._run[log_val_name].log(value, step=env.iteration)
+                self._run[log_val_name].append(value, step=env.iteration)
                 log_std_name = f"{self._base_namespace}{dataset}/{metric}/std"
-                self._run[log_std_name].log(std, step=env.iteration)
+                self._run[log_std_name].append(std, step=env.iteration)
 
 
 def create_booster_summary(
@@ -271,7 +271,7 @@ def create_booster_summary(
             from sklearn.model_selection import train_test_split
 
             # Create run
-            run = neptune.init(
+            run = neptune.init_run(
                 project="common/lightgbm-integration",
                 api_token="ANONYMOUS",
                 name="train-cls",
