@@ -71,10 +71,10 @@ class NeptuneCallback:
         for testing without registration.
 
     Args:
-        run (:obj:`neptune.new.run.Run`, :obj:`neptune.new.handler.Handler): Neptune run or handler object.
+        run: Neptune run or handler object.
             A run in Neptune is a representation of all metadata that you log to Neptune.
             Learn more in `run docs`_.
-        base_namespace(:obj:`str`, optional): Root namespace. All metadata will be logged inside.
+        base_namespace: Root namespace. All metadata will be logged inside.
             Default is empty string. In this case metadata is logged without common "base_namespace".
 
     Examples:
@@ -138,7 +138,7 @@ class NeptuneCallback:
 
     """
 
-    def __init__(self, run: "neptune.Run", base_namespace=""):
+    def __init__(self, run: Union[neptune.run.Run, neptune.handler.Handler], base_namespace: str = ""):
         expect_not_an_experiment(run)
         verify_type("run", run, (neptune.run.Run, neptune.handler.Handler))
         verify_type("base_namespace", base_namespace, str)
