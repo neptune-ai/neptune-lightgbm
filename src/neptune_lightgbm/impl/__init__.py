@@ -91,7 +91,7 @@ class NeptuneCallback:
             # Create run
             run = neptune.init_run(
                 project="common/lightgbm-integration",
-                api_token="ANONYMOUS",
+                api_token=neptune.ANONYMOUS_API_TOKEN,
                 name="train-cls",
                 tags=["lgbm-integration", "train", "cls"]
             )
