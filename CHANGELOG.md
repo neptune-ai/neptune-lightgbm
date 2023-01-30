@@ -7,7 +7,7 @@
 
  ### Breaking changes
  - We removed support for the legacy Neptune client API. Use it with `import neptune.legacy as neptune`.
- - The integration uses now `Run.append()` method instead of `Run.log()` which is available since version 0.16.14
+ - Instead of the `log()` method, the integration now uses `append()` which is available since version 0.16.14
    of neptune-client.
 
 ## [UNRELEASED] neptune-lightgbm 0.10.1
