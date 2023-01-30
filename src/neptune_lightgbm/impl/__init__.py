@@ -71,7 +71,7 @@ class NeptuneCallback:
         for testing without registration.
 
     Args:
-        run: Neptune run or handler object.
+        run: Neptune run or namespace handler object.
             A run in Neptune is a representation of all metadata that you log to Neptune.
             Learn more in `run docs`_.
         base_namespace: Root namespace. All metadata will be logged inside.
