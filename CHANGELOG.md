@@ -1,7 +1,7 @@
 ## neptune-lightgbm 1.0.0
 
  ### Changes
- - `NeptuneCallback` accepts now namespace `Handler` as an alternative to `Run` for the `run` argument. This means that
+ - `NeptuneCallback` now accepts a namespace `Handler` as an alternative to `Run` for the `run` argument. This means that
    you can call it like `NeptuneCallback(run=run["some/namespace/"])` to log everything to the `some/namespace/`
    location of the run.
 
