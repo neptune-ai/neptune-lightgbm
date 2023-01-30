@@ -67,7 +67,7 @@ class NeptuneCallback:
     For more details see `Neptune-LightGBM docs`_.
 
     Note:
-        You can use public ``api_token="ANONYMOUS"`` and set ``project="common/lightgbm-integration"``
+        You can use public ``api_token=neptune.ANONYMOUS_API_TOKEN`` and set ``project="common/lightgbm-integration"``
         for testing without registration.
 
     Args:
@@ -273,7 +273,7 @@ def create_booster_summary(
             # Create run
             run = neptune.init_run(
                 project="common/lightgbm-integration",
-                api_token="ANONYMOUS",
+                api_token=neptune.ANONYMOUS_API_TOKEN,
                 name="train-cls",
                 tags=["lgbm-integration", "train", "cls"]
             )
@@ -324,7 +324,7 @@ def create_booster_summary(
             )
 
     .. _Neptune-LightGBM docs:
-        https://docs.neptune.ai/integrations-and-supported-tools/model-training/lightgbm
+        https://docs.neptune.ai/integrations/lightgbm
        _lightgbm.plot_importance:
         https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.plot_importance.html#lightgbm-plot-importance
        _lightgbm.plot_tree:
