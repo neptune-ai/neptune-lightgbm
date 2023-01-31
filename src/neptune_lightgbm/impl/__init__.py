@@ -38,6 +38,7 @@ try:
         expect_not_an_experiment,
         verify_type,
     )
+    from neptune.new.utils import stringify_unsupported
 except ImportError:
     # neptune-client>=1.0.0 package structure
     import neptune
@@ -45,6 +46,7 @@ except ImportError:
         expect_not_an_experiment,
         verify_type,
     )
+    from neptune.utils import stringify_unsupported
 
 from neptune_lightgbm.impl.version import __version__
 
@@ -138,9 +140,9 @@ class NeptuneCallback:
 
     """
 
-    def __init__(self, run: Union[neptune.run.Run, neptune.handler.Handler], base_namespace: str = ""):
+    def __init__(self, run: Union[neptune.Run, neptune.handler.Handler], base_namespace: str = ""):
         expect_not_an_experiment(run)
-        verify_type("run", run, (neptune.run.Run, neptune.handler.Handler))
+        verify_type("run", run, (neptune.Run, neptune.handler.Handler))
         verify_type("base_namespace", base_namespace, str)
 
         if base_namespace and not base_namespace.endswith("/"):
@@ -151,11 +153,15 @@ class NeptuneCallback:
         self.params_logged = False
         self.feature_names_logged = False
 
-        self._run.get_root_object()[INTEGRATION_VERSION_KEY] = __version__
+        root_obj = run
+        if isinstance(run, neptune.handler.Handler):
+            root_obj = run.get_root_object()
+
+        root_obj[INTEGRATION_VERSION_KEY] = __version__
 
     def __call__(self, env):
         if not self.params_logged:
-            self._run[f"{self._base_namespace}params"] = env.params
+            self._run[f"{self._base_namespace}params"] = stringify_unsupported(env.params)
             self._run[f"{self._base_namespace}params/env/begin_iteration"] = env.begin_iteration
             self._run[f"{self._base_namespace}params/env/end_iteration"] = env.end_iteration
             self.params_logged = True
@@ -163,13 +169,15 @@ class NeptuneCallback:
         if not self.feature_names_logged:
             # lgb.train
             if isinstance(env.model, lgb.engine.Booster):
-                self._run[f"{self._base_namespace}feature_names"] = env.model.feature_name()
+                self._run[f"{self._base_namespace}feature_names"] = stringify_unsupported(env.model.feature_name())
                 self._run[f"{self._base_namespace}train_set/num_features"] = env.model.train_set.num_feature()
                 self._run[f"{self._base_namespace}train_set/num_rows"] = env.model.train_set.num_data()
             # lgb.cv
             if isinstance(env.model, lgb.engine.CVBooster):
                 for i, booster in enumerate(env.model.boosters):
-                    self._run[f"{self._base_namespace}/booster_{i}/feature_names"] = booster.feature_name()
+                    self._run[f"{self._base_namespace}/booster_{i}/feature_names"] = stringify_unsupported(
+                        booster.feature_name()
+                    )
 
                     self._run[
                         f"{self._base_namespace}/booster_{i}/train_set/num_features"

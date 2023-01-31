@@ -42,9 +42,9 @@ import neptune.new as neptune
 from neptune.new.integrations.lightgbm import NeptuneCallback
 
 # Start a run
-run = neptune.init(
+run = neptune.init_run(
     project="common/lightgbm-integration",
-    api_token="ANONYMOUS",
+    api_token=neptune.ANONYMOUS_API_TOKEN,
 )
 
 # Create a NeptuneCallback instance
