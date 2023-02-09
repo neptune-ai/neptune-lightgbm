@@ -38,6 +38,7 @@ try:
         expect_not_an_experiment,
         verify_type,
     )
+    from neptune.new.utils import stringify_unsupported
 except ImportError:
     # neptune-client>=1.0.0 package structure
     import neptune
@@ -45,6 +46,7 @@ except ImportError:
         expect_not_an_experiment,
         verify_type,
     )
+    from neptune.utils import stringify_unsupported
 
 from neptune_lightgbm.impl.version import __version__
 
@@ -67,14 +69,14 @@ class NeptuneCallback:
     For more details see `Neptune-LightGBM docs`_.
 
     Note:
-        You can use public ``api_token="ANONYMOUS"`` and set ``project="common/lightgbm-integration"``
+        You can use public ``api_token=neptune.ANONYMOUS_API_TOKEN`` and set ``project="common/lightgbm-integration"``
         for testing without registration.
 
     Args:
-        run (:obj:`neptune.new.run.Run`): Neptune run object.
+        run: Neptune run or namespace handler object.
             A run in Neptune is a representation of all metadata that you log to Neptune.
             Learn more in `run docs`_.
-        base_namespace(:obj:`str`, optional): Root namespace. All metadata will be logged inside.
+        base_namespace: Root namespace. All metadata will be logged inside.
             Default is empty string. In this case metadata is logged without common "base_namespace".
 
     Examples:
@@ -89,9 +91,9 @@ class NeptuneCallback:
             from sklearn.model_selection import train_test_split
 
             # Create run
-            run = neptune.init(
+            run = neptune.init_run(
                 project="common/lightgbm-integration",
-                api_token="ANONYMOUS",
+                api_token=neptune.ANONYMOUS_API_TOKEN,
                 name="train-cls",
                 tags=["lgbm-integration", "train", "cls"]
             )
@@ -130,17 +132,17 @@ class NeptuneCallback:
             )
 
     .. _Neptune-LightGBM docs:
-        https://docs.neptune.ai/integrations-and-supported-tools/model-training/lightgbm
+        https://docs.neptune.ai/integrations/lightgbm/
        _run docs:
-        https://docs.neptune.ai/api-reference/run
+        https://docs.neptune.ai/api/run/
        _example scripts:
         https://github.com/neptune-ai/examples/tree/main/integrations-and-supported-tools/lightgbm/scripts
 
     """
 
-    def __init__(self, run: "neptune.Run", base_namespace=""):
+    def __init__(self, run: Union[neptune.Run, neptune.handler.Handler], base_namespace: str = ""):
         expect_not_an_experiment(run)
-        verify_type("run", run, neptune.Run)
+        verify_type("run", run, (neptune.Run, neptune.handler.Handler))
         verify_type("base_namespace", base_namespace, str)
 
         if base_namespace and not base_namespace.endswith("/"):
@@ -151,11 +153,15 @@ class NeptuneCallback:
         self.params_logged = False
         self.feature_names_logged = False
 
-        self._run[INTEGRATION_VERSION_KEY] = __version__
+        root_obj = run
+        if isinstance(run, neptune.handler.Handler):
+            root_obj = run.get_root_object()
+
+        root_obj[INTEGRATION_VERSION_KEY] = __version__
 
     def __call__(self, env):
         if not self.params_logged:
-            self._run[f"{self._base_namespace}params"] = env.params
+            self._run[f"{self._base_namespace}params"] = stringify_unsupported(env.params)
             self._run[f"{self._base_namespace}params/env/begin_iteration"] = env.begin_iteration
             self._run[f"{self._base_namespace}params/env/end_iteration"] = env.end_iteration
             self.params_logged = True
@@ -163,13 +169,15 @@ class NeptuneCallback:
         if not self.feature_names_logged:
             # lgb.train
             if isinstance(env.model, lgb.engine.Booster):
-                self._run[f"{self._base_namespace}feature_names"] = env.model.feature_name()
+                self._run[f"{self._base_namespace}feature_names"] = stringify_unsupported(env.model.feature_name())
                 self._run[f"{self._base_namespace}train_set/num_features"] = env.model.train_set.num_feature()
                 self._run[f"{self._base_namespace}train_set/num_rows"] = env.model.train_set.num_data()
             # lgb.cv
             if isinstance(env.model, lgb.engine.CVBooster):
                 for i, booster in enumerate(env.model.boosters):
-                    self._run[f"{self._base_namespace}/booster_{i}/feature_names"] = booster.feature_name()
+                    self._run[f"{self._base_namespace}/booster_{i}/feature_names"] = stringify_unsupported(
+                        booster.feature_name()
+                    )
 
                     self._run[
                         f"{self._base_namespace}/booster_{i}/train_set/num_features"
@@ -187,14 +195,14 @@ class NeptuneCallback:
             if len(row) == 4:
                 dataset, metric, value, _ = row
                 log_name = f"{self._base_namespace}{dataset}/{metric}"
-                self._run[log_name].log(value, step=env.iteration)
+                self._run[log_name].append(value, step=env.iteration)
             # lgb.cv
             if len(row) == 5:
                 dataset, metric, value, _, std = row
                 log_val_name = f"{self._base_namespace}{dataset}/{metric}/val"
-                self._run[log_val_name].log(value, step=env.iteration)
+                self._run[log_val_name].append(value, step=env.iteration)
                 log_std_name = f"{self._base_namespace}{dataset}/{metric}/std"
-                self._run[log_std_name].log(std, step=env.iteration)
+                self._run[log_std_name].append(std, step=env.iteration)
 
 
 def create_booster_summary(
@@ -271,9 +279,9 @@ def create_booster_summary(
             from sklearn.model_selection import train_test_split
 
             # Create run
-            run = neptune.init(
+            run = neptune.init_run(
                 project="common/lightgbm-integration",
-                api_token="ANONYMOUS",
+                api_token=neptune.ANONYMOUS_API_TOKEN,
                 name="train-cls",
                 tags=["lgbm-integration", "train", "cls"]
             )
@@ -324,7 +332,7 @@ def create_booster_summary(
             )
 
     .. _Neptune-LightGBM docs:
-        https://docs.neptune.ai/integrations-and-supported-tools/model-training/lightgbm
+        https://docs.neptune.ai/integrations/lightgbm
        _lightgbm.plot_importance:
         https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.plot_importance.html#lightgbm-plot-importance
        _lightgbm.plot_tree:
