@@ -102,6 +102,7 @@ def test_e2e_using_namespace(dataset):
         callbacks=[neptune_callback],
     )
 
+    run.wait()
     validate_results(run, False, False, False, False, False, base_namespace="training")
 
 
