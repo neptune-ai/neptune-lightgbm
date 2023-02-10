@@ -17,7 +17,7 @@
 
      - name: Install dependencies
        working-directory: ${{ inputs.working_directory }}
-       run: pip install -e .[dev]
+       run: pip install -e .[dev] && pip install scikit-learn
        shell: bash
 
      - name: Setup Graphviz
@@ -25,11 +25,6 @@
        with:
          ubuntu-skip-apt-update: true
          macos-skip-brew-update: true
-
-     - name: Install scikit-learn
-       working-directory: ${{ inputs.working_directory }}
-       run: pip install scikit-learn
-       shell: bash
 
      - name: Run tests
        working-directory: ${{ inputs.working_directory }}
