@@ -17,13 +17,17 @@ except ImportError:
         create_booster_summary,
     )
 
+args = (
+    (True, True, True, True, True),
+    (False, False, False, False, False),
+)
 
-@pytest.mark.parametrize("log_importances", [True, False])
-@pytest.mark.parametrize("log_confusion_matrix", [True, False])
-@pytest.mark.parametrize("log_pickled_booster", [True, False])
-@pytest.mark.parametrize("log_trees", [True, False])
-@pytest.mark.parametrize("log_trees_as_dataframe", [True, False])
-def test_e2e(dataset, log_importances, log_confusion_matrix, log_pickled_booster, log_trees, log_trees_as_dataframe):
+
+@pytest.mark.parametrize("args", args)
+def test_e2e(dataset, args):
+    # Since these all arguments are independent of each other,
+    # we don't check all combinations.
+    log_importances, log_confusion_matrix, log_pickled_booster, log_trees, log_trees_as_dataframe = args
     # Start a run
     run = init_run()
 
