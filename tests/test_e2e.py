@@ -110,6 +110,38 @@ def test_e2e_using_namespace(dataset):
     validate_results(run, False, False, False, False, False, base_namespace="training")
 
 
+def test_e2e_using_handler(dataset):
+    # NOTE: We don't create summary as summary
+    # doesn't depend on base_namesace.
+
+    # Start a run
+    run = init_run()
+
+    # Create a NeptuneCallback instance with namespace handler
+    neptune_callback = NeptuneCallback(run=run["namespace"], base_namespace="training")
+
+    X_train, X_test, y_train, y_test = dataset
+
+    lgb_train = lgb.Dataset(X_train, y_train)
+
+    # Define model parameters
+    params = {
+        "boosting_type": "gbdt",
+        "objective": "multiclass",
+        "num_class": 3,
+    }
+
+    # Train the model
+    lgb.train(
+        params,
+        lgb_train,
+        callbacks=[neptune_callback],
+    )
+
+    run.wait()
+    validate_results(run, False, False, False, False, False, base_namespace="namespace/training")
+
+
 def validate_results(
     run, log_importances, log_confusion_matrix, log_pickled_booster, log_trees, log_trees_as_dataframe, base_namespace
 ):
