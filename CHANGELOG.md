@@ -4,15 +4,11 @@
  - `NeptuneCallback` now accepts a namespace `Handler` as an alternative to `Run` for the `run` argument. This means that
    you can call it like `NeptuneCallback(run=run["some/namespace/"])` to log everything to the `some/namespace/`
    location of the run.
+ - Removed size limit for `log_trees_as_dataframe` ([#14](https://github.com/neptune-ai/neptune-lightgbm/pull/14))
 
  ### Breaking changes
  - Instead of the `log()` method, the integration now uses `append()` which is available since version 0.16.14
    of neptune-client.
-
-## [UNRELEASED] neptune-lightgbm 0.10.1
-
-### Changes
-- Removed size limit for `log_trees_as_dataframe` ([#14](https://github.com/neptune-ai/neptune-lightgbm/pull/14))
 
 ## neptune-lightgbm 0.10.0
 
