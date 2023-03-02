@@ -15,8 +15,8 @@ Experiment tracking, model registry, data versioning, and live model monitoring 
 * feature names, num_features, and num_rows for the train set,
 * hardware consumption (CPU, GPU, memory),
 * stdout and stderr logs,
-* training code and git commit information.
-* [other metadata](https://docs.neptune.ai/you-should-know/what-can-you-log-and-display)
+* training code and Git commit information,
+* [other metadata](https://docs.stage.neptune.ai/logging/what_you_can_log)
 
 ![image](https://user-images.githubusercontent.com/97611089/160637021-6d324be7-00f0-4b89-bffd-ae937f6802b4.png)
 *Example dashboard with train-valid metrics and selected parameters*
@@ -24,22 +24,23 @@ Experiment tracking, model registry, data versioning, and live model monitoring 
 
 ## Resources
 
-* [Documentation](https://docs.neptune.ai/integrations-and-supported-tools/model-training/lightgbm)
+* [Documentation](https://docs.neptune.ai/integrations/lightgbm)
 * [Code example on GitHub](https://github.com/neptune-ai/examples/blob/main/integrations-and-supported-tools/lightgbm/scripts/Neptune_LightGBM_train_summary.py)
 * [Example of a run logged in the Neptune app](https://app.neptune.ai/o/common/org/lightgbm-integration/e/LGBM-86/dashboard/train-cls-summary-6c07f9e0-36ca-4432-9530-7fd3457220b6)
 * [Run example in Google Colab](https://colab.research.google.com/github/neptune-ai/examples/blob/main/integrations-and-supported-tools/lightgbm/notebooks/Neptune_LightGBM.ipynb)
 
 ## Example
 
-```python
-# On the command line:
-pip install neptune-client lightgbm neptune-lightgbm
 ```
+# On the command line:
+pip install neptune-lightgbm
+```
+
 ```python
 # In Python:
 import lightgbm as lgb
-import neptune.new as neptune
-from neptune.new.integrations.lightgbm import NeptuneCallback
+import neptune
+from neptune.integrations.lightgbm import NeptuneCallback
 
 # Start a run
 run = neptune.init_run(
