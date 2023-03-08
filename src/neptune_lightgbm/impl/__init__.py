@@ -171,53 +171,53 @@ def create_booster_summary(
 ) -> dict:
     """Creates model summary after training that can be assigned to the run namespace.
 
-    You can log multiple types of metadata:
-    - pickled model
-    - feature importance chart
-    - visualized trees
-    - trees represented as DataFrame
-    - confusion matrix (only for classification problems)
+     You can log multiple types of metadata:
+     - pickled model
+     - feature importance chart
+     - visualized trees
+     - trees represented as DataFrame
+     - confusion matrix (only for classification problems)
 
-   You can log the summary either to a new run or to the same run that you used during model training.
+    You can log the summary either to a new run or to the same run that you used during model training.
 
-    Args:
-        booster: Trained LightGBM model.
-        log_importances: Whether to log feature importance charts.
-        max_num_features: Max number of top features on the importance charts.
-            Works only if log_importances is set to True.
-            If 'None' or <1, all features will be displayed.
-        list_trees: Indices of the target tree to visualize.
-            Works only if log_trees is set to True.
-        log_trees_as_dataframe: Parse the model and log trees in pandas DataFrame format.
-            Works only for lgb.Booster.
-        log_pickled_booster: Whether to log model as pickled file.
-        log_trees: Whether to log visualized trees.
-            Requires the Graphviz library to be installed.
-        tree_figsize: Control size of the visualized tree image.
-            Increase the value in case you work with large trees.
-            Works only if log_trees is set to True.
-        log_confusion_matrix: Whether to log confusion matrix.
-            If set to True, you need to pass y_true and y_pred.
-        y_true: True labels on the test set.
-            Needed only if log_confusion_matrix is set to True.
-        y_pred: Predictions on the test set.
-            Needed only if log_confusion_matrix is set to True.
+     Args:
+         booster: Trained LightGBM model.
+         log_importances: Whether to log feature importance charts.
+         max_num_features: Max number of top features on the importance charts.
+             Works only if log_importances is set to True.
+             If 'None' or <1, all features will be displayed.
+         list_trees: Indices of the target tree to visualize.
+             Works only if log_trees is set to True.
+         log_trees_as_dataframe: Parse the model and log trees in pandas DataFrame format.
+             Works only for lgb.Booster.
+         log_pickled_booster: Whether to log model as pickled file.
+         log_trees: Whether to log visualized trees.
+             Requires the Graphviz library to be installed.
+         tree_figsize: Control size of the visualized tree image.
+             Increase the value in case you work with large trees.
+             Works only if log_trees is set to True.
+         log_confusion_matrix: Whether to log confusion matrix.
+             If set to True, you need to pass y_true and y_pred.
+         y_true: True labels on the test set.
+             Needed only if log_confusion_matrix is set to True.
+         y_pred: Predictions on the test set.
+             Needed only if log_confusion_matrix is set to True.
 
-    Returns:
-        Python dictionary that contains all the metadata and can be assigned to the run:
-            `run["booster_summary"] = create_booster_summary(...)`
+     Returns:
+         Python dictionary that contains all the metadata and can be assigned to the run:
+             `run["booster_summary"] = create_booster_summary(...)`
 
-    Example:
-        import neptune
-        from neptune.integrations.lightgbm import create_booster_summary
+     Example:
+         import neptune
+         from neptune.integrations.lightgbm import create_booster_summary
 
-        run = neptune.init_run()
-        gbm = lgb.train(params, ...)
-        run["lgbm_summary"] = create_booster_summary(booster=gbm)
+         run = neptune.init_run()
+         gbm = lgb.train(params, ...)
+         run["lgbm_summary"] = create_booster_summary(booster=gbm)
 
-    For more, see the docs:
-        Tutorial: https://docs.neptune.ai/integrations/lightgbm
-        API reference: https://docs.neptune.ai/api/integrations/lightgbm
+     For more, see the docs:
+         Tutorial: https://docs.neptune.ai/integrations/lightgbm
+         API reference: https://docs.neptune.ai/api/integrations/lightgbm
     """
     results_dict = {}
     visuals_path = "visualizations/"
