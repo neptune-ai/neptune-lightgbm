@@ -70,7 +70,7 @@ class NeptuneCallback:
         run: Neptune run object. You can also pass a namespace handler object;
             for example, run["test"], in which case all metadata is logged under
             the "test" namespace inside the run.
-        base_namespace: Root namespace inside which all training metadata is logged.
+        base_namespace: Root namespace where all metadata logged by the callback is stored.
             If omitted, the metadata is logged without a common root namespace.
 
     Example:
