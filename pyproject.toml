@@ -9,13 +9,12 @@ style = "semver"
 pattern = "default-unprefixed"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 
 # Python lack of functionalities from future versions
 importlib-metadata = { version = "*", python = "<3.8" }
 
 # Base requirements
-neptune-client = ">=0.16.17"
 lightgbm = "*"
 matplotlib = "*"
 scikit-plot = "*"
@@ -25,12 +24,14 @@ graphviz = "*"
 pre-commit = { version = "*", optional = true }
 pytest = { version = ">=5.0", optional = true }
 pytest-cov = { version = "2.10.1", optional = true }
+neptune = { version = ">=1.0.0", optional = true }
 
 [tool.poetry.extras]
 dev = [
     "pre-commit",
     "pytest",
     "pytest-cov",
+    "neptune",
 ]
 
 [tool.poetry]

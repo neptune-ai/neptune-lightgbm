@@ -31,24 +31,32 @@ import numpy as np
 from matplotlib import image
 from scikitplot.metrics import plot_confusion_matrix
 
+from neptune_lightgbm.impl.version import __version__
+
 try:
-    # neptune-client=0.9.0+ package structure
-    import neptune.new as neptune
+    from neptune import Run
+    from neptune.handler import Handler
+    from neptune.ntegrations.utils import (
+        expect_not_an_experiment,
+        verify_type,
+    )
+    from neptune.types import (
+        File,
+        FileSeries,
+    )
+    from neptune.utils import stringify_unsupported
+except ImportError:
+    from neptune.new import Run
+    from neptune.new.handler import Handler
     from neptune.new.integrations.utils import (
         expect_not_an_experiment,
         verify_type,
     )
-    from neptune.new.utils import stringify_unsupported
-except ImportError:
-    # neptune-client>=1.0.0 package structure
-    import neptune
-    from neptune.integrations.utils import (
-        expect_not_an_experiment,
-        verify_type,
+    from neptune.new.types import (
+        File,
+        FileSeries,
     )
-    from neptune.utils import stringify_unsupported
-
-from neptune_lightgbm.impl.version import __version__
+    from neptune.new.utils import stringify_unsupported
 
 INTEGRATION_VERSION_KEY = "source_code/integrations/neptune-lightgbm"
 
@@ -91,9 +99,9 @@ class NeptuneCallback:
         API reference: https://docs.neptune.ai/api/integrations/lightgbm
     """
 
-    def __init__(self, run: Union[neptune.Run, neptune.handler.Handler], base_namespace: str = ""):
+    def __init__(self, run: Union[Run, Handler], base_namespace: str = ""):
         expect_not_an_experiment(run)
-        verify_type("run", run, (neptune.Run, neptune.handler.Handler))
+        verify_type("run", run, (Run, Handler))
         verify_type("base_namespace", base_namespace, str)
 
         if base_namespace and not base_namespace.endswith("/"):
@@ -105,7 +113,7 @@ class NeptuneCallback:
         self.feature_names_logged = False
 
         root_obj = run
-        if isinstance(run, neptune.handler.Handler):
+        if isinstance(run, Handler):
             root_obj = run.get_root_object()
 
         root_obj[INTEGRATION_VERSION_KEY] = __version__
@@ -228,9 +236,9 @@ def create_booster_summary(
         gain_plot = lgb.plot_importance(
             booster, importance_type="gain", title="Feature importance (gain)", max_num_features=max_num_features
         )
-        results_dict[f"{visuals_path}feature_importances/split"] = neptune.types.File.as_image(split_plot.figure)
+        results_dict[f"{visuals_path}feature_importances/split"] = File.as_image(split_plot.figure)
 
-        results_dict[f"{visuals_path}feature_importances/gain"] = neptune.types.File.as_image(gain_plot.figure)
+        results_dict[f"{visuals_path}feature_importances/gain"] = File.as_image(gain_plot.figure)
 
     if log_trees:
         try:
@@ -253,25 +261,25 @@ def create_booster_summary(
             s.seek(0)
             ax.imshow(image.imread(s))
             ax.axis("off")
-            trees_series.append(neptune.types.File.as_image(ax.figure))
-        results_dict[f"{visuals_path}trees"] = neptune.types.FileSeries(trees_series)
+            trees_series.append(File.as_image(ax.figure))
+        results_dict[f"{visuals_path}trees"] = FileSeries(trees_series)
 
     if log_trees_as_dataframe:
         if isinstance(booster, lgb.Booster):
             df = booster.trees_to_dataframe()
             stream_buffer = BytesIO()
             df.to_csv(stream_buffer, index=False)
-            results_dict["trees_as_dataframe"] = neptune.types.File.from_stream(stream_buffer, extension="csv")
+            results_dict["trees_as_dataframe"] = File.from_stream(stream_buffer, extension="csv")
         else:
             warnings.warn(
                 "'trees_as_dataframe' won't be logged." " `booster` must be instance of `lightgbm.Booster` class."
             )
 
     if log_pickled_booster:
-        results_dict["pickled_model"] = neptune.types.File.as_pickle(booster)
+        results_dict["pickled_model"] = File.as_pickle(booster)
 
     if log_confusion_matrix:
         ax = plot_confusion_matrix(y_true=y_true, y_pred=y_pred)
-        results_dict[f"{visuals_path}confusion_matrix"] = neptune.types.File.as_image(ax.figure)
+        results_dict[f"{visuals_path}confusion_matrix"] = File.as_image(ax.figure)
 
     return results_dict
