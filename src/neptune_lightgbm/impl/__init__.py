@@ -36,7 +36,7 @@ from neptune_lightgbm.impl.version import __version__
 try:
     from neptune import Run
     from neptune.handler import Handler
-    from neptune.ntegrations.utils import (
+    from neptune.integrations.utils import (
         expect_not_an_experiment,
         verify_type,
     )
