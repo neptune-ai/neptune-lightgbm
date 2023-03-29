@@ -1,3 +1,8 @@
+## neptune-lightgbm 2.0.0
+
+### Changes
+- Removed `neptune` and `neptune-client` from base requirements. ([#22](https://github.com/neptune-ai/neptune-lightgbm/pull/22))
+
 ## neptune-lightgbm 1.0.0
 
  ### Changes
