@@ -3,19 +3,18 @@ import numpy as np
 import pytest
 
 try:
-    # neptune-client=0.9.0+ package structure
-    from neptune.new import init_run
-    from neptune.new.integrations.lightgbm import (
-        NeptuneCallback,
-        create_booster_summary,
-    )
-except ImportError:
-    # neptune-client>=1.0.0 package structure
     from neptune import init_run
     from neptune.integrations.lightgbm import (
         NeptuneCallback,
         create_booster_summary,
     )
+except ImportError:
+    from neptune.new import init_run
+    from neptune.new.integrations.lightgbm import (
+        NeptuneCallback,
+        create_booster_summary,
+    )
+
 
 args = (
     (True, True, True, True, True),
