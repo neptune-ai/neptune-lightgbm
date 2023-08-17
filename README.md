@@ -1,12 +1,13 @@
 # Neptune + LightGBM Integration
 
-Experiment tracking, model registry, data versioning, and live model monitoring for LightGBM trained models.
+Experiment tracking for LightGBM-trained models.
 
 ## What will you get with this integration?
 
-* Log, display, organize, and compare ML experiments in a single place
-* Version, store, manage, and query trained models, and model building metadata
-* Record and monitor model training, evaluation, or production runs live
+* Log, organize, visualize, and compare ML experiments in a single place
+* Monitor model training live
+* Version and query production-ready models and associated metadata (e.g., datasets)
+* Collaborate with the team and across the organization
 
 ## What will be logged to Neptune?
 
@@ -18,9 +19,7 @@ Experiment tracking, model registry, data versioning, and live model monitoring 
 * training code and Git commit information,
 * [other metadata](https://docs.neptune.ai/logging/what_you_can_log)
 
-![image](https://user-images.githubusercontent.com/97611089/160637021-6d324be7-00f0-4b89-bffd-ae937f6802b4.png)
-*Example dashboard with train-valid metrics and selected parameters*
-
+![image](https://docs.neptune.ai/img/app/integrations/lightgbm.png)
 
 ## Resources
 
